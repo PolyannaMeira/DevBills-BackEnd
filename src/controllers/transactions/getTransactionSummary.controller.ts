@@ -1,4 +1,3 @@
-
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import type { FastifyReply, FastifyRequest } from "fastify";
@@ -9,13 +8,11 @@ import type { TransactionSummary } from "../../types/transaction.types";
 
 dayjs.extend(utc);
 
-// (Opcional) enum em runtime para evitar typos:
 const TRANSACTION_TYPE = {
   INCOME: "INCOME",
   EXPENSE: "EXPENSE",
 } as const;
-type TransactionType = typeof TRANSACTION_TYPE[keyof typeof TRANSACTION_TYPE];
-
+type TransactionType = (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
 
 export const getTransactionsSummary = async (
   request: FastifyRequest<{ Querystring: GetTransactionsSummaryQuery }>,
@@ -57,18 +54,17 @@ export const getTransactionsSummary = async (
     const groupedExpenses = new Map<string, CategorySummary>();
 
     for (const transaction of transactions) {
-      if (transaction.type === TRANSACTION_TYPE.EXPENSE) { // <-- comparação em runtime
+      if (transaction.type === TRANSACTION_TYPE.EXPENSE) {
+        // <-- comparação em runtime
         const key = transaction.categoryId ?? "uncategorized";
 
-        const existing =
-          groupedExpenses.get(key) ??
-          {
-            categoryId: transaction.categoryId ?? "uncategorized",
-            categoryName: transaction.category?.name ?? "Sem categoria",
-            categoryColor: transaction.category?.color ?? "#9CA3AF",
-            amount: 0,
-            percentage: 0,
-          };
+        const existing = groupedExpenses.get(key) ?? {
+          categoryId: transaction.categoryId ?? "uncategorized",
+          categoryName: transaction.category?.name ?? "Sem categoria",
+          categoryColor: transaction.category?.color ?? "#9CA3AF",
+          amount: 0,
+          percentage: 0,
+        };
 
         existing.amount += transaction.amount;
         groupedExpenses.set(key, existing);
@@ -87,9 +83,7 @@ export const getTransactionsSummary = async (
         .map((entry) => ({
           ...entry,
           percentage:
-            totalExpenses > 0
-              ? Number(((entry.amount / totalExpenses) * 100).toFixed(2))
-              : 0,
+            totalExpenses > 0 ? Number(((entry.amount / totalExpenses) * 100).toFixed(2)) : 0,
         }))
         .sort((a, b) => b.amount - a.amount),
     };

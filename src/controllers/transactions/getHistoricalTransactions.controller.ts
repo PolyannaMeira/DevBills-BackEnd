@@ -42,7 +42,8 @@ export const getHistoricalTransactions = async (
   const { month, year, months = 6 } = request.query;
 
   // Define the base month and calculate the full date range
-  const baseDate = new Date(year, month, 1);
+  const baseDate = new Date(year, month - 1, 1);
+
   const startDate = dayjs.utc(baseDate).subtract(months, "month").startOf("month").toDate();
   const endDate = dayjs.utc(baseDate).endOf("month").toDate();
 

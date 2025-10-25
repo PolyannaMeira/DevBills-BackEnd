@@ -15,6 +15,8 @@ app.register(cors,{
     "http://localhost:5173", 
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 });
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
