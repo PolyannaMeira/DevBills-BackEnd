@@ -1,12 +1,16 @@
-import { TransactionType } from "@prisma/client";
+
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 
 const isValidObjectId = (id: string): boolean => ObjectId.isValid(id);
 
-//debug
+// Schemas auxiliares
 const monthSchema = z.coerce.number().int().min(1).max(12);
 const yearSchema  = z.coerce.number().int().min(1970).max(3000);
+
+// ✅ Enum de tipo via Zod (independente do Prisma)
+export const transactionTypeSchema = z.enum(["INCOME", "EXPENSE"]);
+export type TransactionType = z.infer<typeof transactionTypeSchema>;
 
 export const createTransactionSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -17,24 +21,17 @@ export const createTransactionSchema = z.object({
   categoryId: z.string().refine(isValidObjectId, {
     message: "Invalid ObjectId",
   }),
-  type: z.enum([TransactionType.INCOME, TransactionType.EXPENSE], {
-    errorMap: () => ({ message: "Type must be either 'INCOME' or 'EXPENSE'" }),
-  }),
+  // ✅ usa o enum do Zod
+  type: transactionTypeSchema,
 });
 
 export const getTransactionsSchema = z.object({
   month: monthSchema.optional(),
- year: yearSchema.optional(),
-  type: z
-    .enum([TransactionType.INCOME, TransactionType.EXPENSE], {
-      errorMap: () => ({ message: "Type must be either 'INCOME' or 'EXPENSE'" }),
-    })
-    .optional(),
+  year: yearSchema.optional(),
+  type: transactionTypeSchema.optional(),           // ✅
   categoryId: z
     .string()
-    .refine(isValidObjectId, {
-      message: "Invalid ObjectId",
-    })
+    .refine(isValidObjectId, { message: "Invalid ObjectId" })
     .optional(),
 });
 
@@ -46,19 +43,16 @@ export const getTransactionsSummarySchema = z.object({
 export const getHistoricalTransactionsSchema = z.object({
   month: z.coerce.number().min(1).max(12),
   year: z.coerce.number().min(2000).max(2100),
-  months:z.coerce.number().min(1).max(12).optional(),
-
+  months: z.coerce.number().min(1).max(12).optional(),
 });
 
 export const deleteTransactionSchema = z.object({
-  id: z.string().refine(isValidObjectId, {
-    message: "Invalid Id",
-  }),
+  id: z.string().refine(isValidObjectId, { message: "Invalid Id" }),
 });
 
+// ✅ Tipos inferidos
 export type CreateTransactionBody = z.infer<typeof createTransactionSchema>;
 export type GetTransactionsQuery = z.infer<typeof getTransactionsSchema>;
 export type GetTransactionsSummaryQuery = z.infer<typeof getTransactionsSummarySchema>;
 export type GetHistoricalTransactionsSchemaQuery = z.infer<typeof getHistoricalTransactionsSchema>;
 export type DeleteTransactionParams = z.infer<typeof deleteTransactionSchema>;
-

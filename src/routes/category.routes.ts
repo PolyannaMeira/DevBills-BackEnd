@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getCategories } from "../controllers/category.controller";
+import { getCategories } from "../controllers/categoryController";
 
 
 

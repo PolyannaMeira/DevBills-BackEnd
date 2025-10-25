@@ -1,4 +1,4 @@
-import { TransactionType } from "@prisma/client";
+import type { $Enums } from "@prisma/client"; // só tipo, se quiser
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import type { FastifyReply, FastifyRequest } from "fastify";
@@ -9,13 +9,20 @@ import type { TransactionSummary } from "../../types/transaction.types";
 
 dayjs.extend(utc);
 
+// (Opcional) enum em runtime para evitar typos:
+const TRANSACTION_TYPE = {
+  INCOME: "INCOME",
+  EXPENSE: "EXPENSE",
+} as const;
+type TransactionType = typeof TRANSACTION_TYPE[keyof typeof TRANSACTION_TYPE];
+
+
 export const getTransactionsSummary = async (
   request: FastifyRequest<{ Querystring: GetTransactionsSummaryQuery }>,
   reply: FastifyReply,
 ): Promise<void> => {
   const userId = request.userId;
 
-  // Check if user is authenticated
   if (!userId) {
     reply.status(401).send({ error: "Unauthorized" });
     return;
@@ -50,18 +57,21 @@ export const getTransactionsSummary = async (
     const groupedExpenses = new Map<string, CategorySummary>();
 
     for (const transaction of transactions) {
-      if (transaction.type === TransactionType.EXPENSE) {
-        
-        const existing = groupedExpenses.get(transaction.categoryId) ?? { //?? - if it is false
-          categoryId: transaction.categoryId,
-          categoryName: transaction.category.name,
-          categoryColor: transaction.category.color,
-          amount: 0,
-          percentage: 0,
-        };
+      if (transaction.type === TRANSACTION_TYPE.EXPENSE) { // <-- comparação em runtime
+        const key = transaction.categoryId ?? "uncategorized";
+
+        const existing =
+          groupedExpenses.get(key) ??
+          {
+            categoryId: transaction.categoryId ?? "uncategorized",
+            categoryName: transaction.category?.name ?? "Sem categoria",
+            categoryColor: transaction.category?.color ?? "#9CA3AF",
+            amount: 0,
+            percentage: 0,
+          };
 
         existing.amount += transaction.amount;
-        groupedExpenses.set(transaction.categoryId, existing);
+        groupedExpenses.set(key, existing);
 
         totalExpenses += transaction.amount;
       } else {
@@ -73,16 +83,20 @@ export const getTransactionsSummary = async (
       totalExpenses,
       totalIncome: totalIncomes,
       balance: Number((totalIncomes - totalExpenses).toFixed(2)),
-      expenseByCategory: Array.from(groupedExpenses.values()).map((entry) => ({
-        ...entry,
-        percentage: Number.parseFloat(((entry.amount / totalExpenses) * 100).toFixed(2)),
-      })).sort((a, b) => b.amount - a.amount),
+      expenseByCategory: Array.from(groupedExpenses.values())
+        .map((entry) => ({
+          ...entry,
+          percentage:
+            totalExpenses > 0
+              ? Number(((entry.amount / totalExpenses) * 100).toFixed(2))
+              : 0,
+        }))
+        .sort((a, b) => b.amount - a.amount),
     };
 
-    console.log({ groupedExpenses, totalExpenses, totalIncomes });
     reply.send(summary);
   } catch (error) {
-    request.log.error(`Error fetching transactions: ${error}`);
+    request.log.error(`Error fetching transactions: ${String(error)}`);
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };

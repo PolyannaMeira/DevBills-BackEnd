@@ -1,5 +1,7 @@
-import type { TransactionType } from "@prisma/client";
+import type { $Enums } from "@prisma/client";
 import type { CategorySummary } from "./category.types";
+
+type TransactionType = $Enums.TransactionType;
 
 export interface TransactionFilter {
   userId: string;
