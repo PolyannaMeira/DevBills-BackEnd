@@ -20,4 +20,7 @@ app.register(cors,{
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const API_PREFIX = (env as any).API_PREFIX ?? "/"; // deixe "/" na Vercel; pode usar "/api" local se quiser
 app.register(routes, { prefix: API_PREFIX });
+
+app.get("/health", async () => ({ status: "ok" }));
+
 export default app;
