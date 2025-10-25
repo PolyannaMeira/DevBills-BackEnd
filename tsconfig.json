@@ -19,7 +19,7 @@
   },
   "include": [
     "src"
-, "src/controllers/transactions/.controller.ts"  ], // Apenas os arquivos dentro da pasta `src` serão analisados
+, "src/controllers/transactions/.controller.ts", "api"  ], // Apenas os arquivos dentro da pasta `src` serão analisados
   "exclude": [
     "node_modules",
     "dist"
