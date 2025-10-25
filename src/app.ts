@@ -10,7 +10,10 @@ const app = Fastify({
 });
 
 app.register(cors,{
-  origin: true,
+   origin: [
+    "https://dev-bills-front-end-wheat.vercel.app",
+    "http://localhost:5173", 
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 });
 
