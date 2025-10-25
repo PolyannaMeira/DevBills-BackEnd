@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-BR";
 import utc from "dayjs/plugin/utc";
 import prisma from "../../config/prisma";
+import type { Prisma } from "@prisma/client";
 
 dayjs.locale("pt-BR");
 dayjs.extend(utc);
@@ -20,6 +21,11 @@ dayjs.extend(utc);
  * 5. Group transactions by month and calculate income/expense totals
  * 6. Return a summary of monthly data
  */
+
+type Tx = Prisma.TransactionGetPayload<{
+  select: { amount: true; type: true; date: true }
+}>;
+
 export const getHistoricalTransactions = async (
   request: FastifyRequest<{ Querystring: GetHistoricalTransactionsSchemaQuery }>,
   reply: FastifyReply
@@ -42,7 +48,7 @@ export const getHistoricalTransactions = async (
 
   try {
     // Fetch transactions within the given date range
-    const transactions = await prisma.transaction.findMany({
+    const transactions: Tx[] =await prisma.transaction.findMany({
       where: {
         userId,
         date: {
@@ -69,18 +75,18 @@ export const getHistoricalTransactions = async (
 
     // Group transactions by month and sum income and expense values
     // biome-ignore lint/complexity/noForEach: <explanation>
-        transactions.forEach((transaction) => {
-      const monthKey = dayjs.utc(transaction.date).format("MMM/YYYY");
-      const monthData = monthlyData.find((m) => m.name === monthKey);
+       transactions.forEach((transaction: Tx) => {
+  const monthKey = dayjs.utc(transaction.date).format("MMM/YYYY");
+  const monthData = monthlyData.find((m) => m.name === monthKey);
 
-      if (monthData) {
-        if (transaction.type === "INCOME") {
-          monthData.income += transaction.amount;
-        } else {
-          monthData.expenses += transaction.amount;
-        }
-      }
-    });
+  if (monthData) {
+    if (transaction.type === "INCOME") {
+      monthData.income += transaction.amount;
+    } else {
+      monthData.expenses += transaction.amount;
+    }
+  }
+});
 
     // Send the summarized historical data as response
     reply.send({ history: monthlyData });

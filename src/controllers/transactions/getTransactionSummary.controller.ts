@@ -1,4 +1,4 @@
-import type { $Enums } from "@prisma/client"; // só tipo, se quiser
+
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import type { FastifyReply, FastifyRequest } from "fastify";
