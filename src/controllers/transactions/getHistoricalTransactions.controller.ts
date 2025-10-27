@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-BR";
 import utc from "dayjs/plugin/utc";
 import prisma from "../../config/prisma";
-import type { Prisma } from "@prisma/client";
+
 
 dayjs.locale("pt-BR");
 dayjs.extend(utc);
@@ -22,9 +22,8 @@ dayjs.extend(utc);
  * 6. Return a summary of monthly data
  */
 
-type Tx = Prisma.TransactionGetPayload<{
-  select: { amount: true; type: true; date: true }
-}>;
+type Tx = { amount: number; type: "INCOME" | "EXPENSE"; date: Date };
+
 
 export const getHistoricalTransactions = async (
   request: FastifyRequest<{ Querystring: GetHistoricalTransactionsSchemaQuery }>,

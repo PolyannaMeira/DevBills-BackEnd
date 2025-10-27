@@ -12,7 +12,7 @@ const TRANSACTION_TYPE = {
   INCOME: "INCOME",
   EXPENSE: "EXPENSE",
 } as const;
-type TransactionType = (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
+
 
 export const getTransactionsSummary = async (
   request: FastifyRequest<{ Querystring: GetTransactionsSummaryQuery }>,
