@@ -1,22 +1,21 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import routes from "./routes";
+
 const app = Fastify({ logger: true });
 
-const isAllowedOrigin = (origin?: string) => {
-  if (!origin) return true; // curl/Postman
-  const allowList = new Set([
-    "https://dev-bills-front-end-wheat.vercel.app",
-    "http://localhost:5173",
-  ]);
-  // libera previews: ex. https://dev-bills-front-XXXX-polyannas-projects.vercel.app
-  const previewOk = /^https:\/\/dev-bills-front-[a-z0-9-]+-polyannas-projects\.vercel\.app$/.test(origin);
-  return allowList.has(origin) || previewOk;
-};
-
+// CORS ABERTO (teste)
 app.register(cors, {
-  origin: (origin, cb) => cb(null, isAllowedOrigin(origin)),
-  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"],
-  credentials: false, // usa Bearer
+  origin: true, // reflete qualquer Origin
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false, // com Bearer, deixe false
 });
+
+// prefixo: na Vercel, use "/" (o /api externo já é dela)
+const isVercel = !!process.env.VERCEL;
+app.register(routes, { prefix: isVercel ? "/" : "/api" });
+
+app.get("/health", async () => ({ status: "ok" }));
+
+export default app;
