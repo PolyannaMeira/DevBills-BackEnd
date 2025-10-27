@@ -1,27 +1,25 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import app from "../src/app"; // seu app.ts
+import app from "../src/app";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://dev-bills-front-end-wheat.vercel.app",
-  "http://localhost:5173",
-]);
+const isAllowedOrigin = (origin?: string) => {
+  if (!origin) return true;
+  if (origin === "https://dev-bills-front-end-wheat.vercel.app") return true;
+  if (/^https:\/\/dev-bills-front-[a-z0-9-]+-polyannas-projects\.vercel\.app$/.test(origin)) return true;
+  if (origin === "http://localhost:5173") return true;
+  return false;
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const origin = req.headers.origin || "";
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
+  const origin = req.headers.origin as string | undefined;
+  if (isAllowedOrigin(origin) && origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
 
-  // 1) Atenda o preflight aqui mesmo
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
-  // 2) Delegue o restante pro Fastify
   await app.ready();
   app.server.emit("request", req, res);
 }
